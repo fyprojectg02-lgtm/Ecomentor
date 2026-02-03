@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { User, Mail, GraduationCap, Building2, Heart, Save, Loader2, CheckCircle, XCircle, Award, Trophy, Target, TrendingUp, Leaf, Droplet, TreeDeciduous } from "lucide-react";
+export const dynamic = 'force-dynamic';
 
 export default function StudentProfile() {
     const router = useRouter();

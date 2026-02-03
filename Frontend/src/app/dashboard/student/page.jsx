@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -23,8 +23,9 @@ import LearningPathGenerator from "./components/LearningPathGenerator.jsx";
 import TaskRecommendations from "./components/TaskRecommendations.jsx";
 import ImpactEstimator from "./components/ImpactEstimator.jsx";
 import Leaderboard from "./leaderboard/page.jsx";
+export const dynamic = 'force-dynamic';
 
-export default function StudentDashboard() {
+function StudentDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeTab = searchParams.get("tab") || "home";
@@ -437,9 +438,9 @@ export default function StudentDashboard() {
                       <div className="flex items-center gap-3">
                         <div
                           className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${entry.rank === 1 ? "bg-yellow-500/20 text-yellow-300" :
-                              entry.rank === 2 ? "bg-gray-400/20 text-gray-300" :
-                                entry.rank === 3 ? "bg-orange-500/20 text-orange-300" :
-                                  "bg-[#111] text-gray-300"
+                            entry.rank === 2 ? "bg-gray-400/20 text-gray-300" :
+                              entry.rank === 3 ? "bg-orange-500/20 text-orange-300" :
+                                "bg-[#111] text-gray-300"
                             }`}
                         >
                           {entry.rank}
@@ -722,5 +723,20 @@ export default function StudentDashboard() {
         <TaskRecommendations userId={user.id} educationLevel={educationLevel} />
       )}
     </>
+  );
+}
+
+export default function StudentDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <StudentDashboardContent />
+    </Suspense>
   );
 }

@@ -18,6 +18,7 @@ import {
   Loader2,
   X
 } from "lucide-react";
+export const dynamic = 'force-dynamic';
 
 export default function NGOOpportunities() {
   const [opportunities, setOpportunities] = useState([]);

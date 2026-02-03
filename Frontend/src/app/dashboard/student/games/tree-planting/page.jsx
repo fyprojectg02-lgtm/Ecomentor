@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { TreePine, Trophy, Droplet, Sun, Volume2, VolumeX, Home, TrendingUp } from "lucide-react";
 import audioManager from "@/lib/AudioManager";
+export const dynamic = 'force-dynamic';
 
 const treeTypes = [
     { id: 1, emoji: "🌲", name: "Pine", co2: 22, water: 2, sunlight: 3, growTime: 3, biome: "temperate" },

@@ -16,6 +16,8 @@ import {
   Search
 } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 // =============================================
 // STUDENT SUBMISSION COMPONENT
 // =============================================

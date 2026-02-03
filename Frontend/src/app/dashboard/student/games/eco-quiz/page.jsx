@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Trophy, Clock, Zap, Volume2, VolumeX, Home } from "lucide-react";
 import audioManager from "@/lib/AudioManager";
+export const dynamic = 'force-dynamic';
 
 const quizQuestions = {
     easy: [

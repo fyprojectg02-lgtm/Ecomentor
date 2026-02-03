@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { Trophy, Home, Volume2, VolumeX, Zap, Clock, Lightbulb } from "lucide-react";
 import audioManager from "@/lib/AudioManager";
 
+export const dynamic = 'force-dynamic';
+
 const appliances = [
     { id: 1, name: "Lamp", emoji: "💡", energy: 60, on: true },
     { id: 2, name: "TV", emoji: "📺", energy: 150, on: true },
@@ -276,8 +278,8 @@ export default function EnergySaverGame() {
                             key={appliance.id}
                             onClick={() => toggleAppliance(appliance.id)}
                             className={`rounded-2xl p-6 transition-all transform hover:scale-105 ${appliance.on
-                                    ? 'bg-gradient-to-br from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
-                                    : 'bg-[#1a1a1a] border border-[#2a2a2a]'
+                                ? 'bg-gradient-to-br from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
+                                : 'bg-[#1a1a1a] border border-[#2a2a2a]'
                                 }`}
                         >
                             <div className={`text-5xl mb-2 ${appliance.on ? 'animate-pulse' : 'opacity-50'}`}>

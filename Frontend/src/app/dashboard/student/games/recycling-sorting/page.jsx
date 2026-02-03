@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Trophy, Home, Volume2, VolumeX, Flame, Recycle } from "lucide-react";
 import audioManager from "@/lib/AudioManager";
+export const dynamic = 'force-dynamic';
 
 const wasteItems = [
     { id: 1, name: "Plastic Bottle", type: "plastic", emoji: "🍾", fact: "Plastic bottles can be recycled into clothing, furniture, and new bottles!" },

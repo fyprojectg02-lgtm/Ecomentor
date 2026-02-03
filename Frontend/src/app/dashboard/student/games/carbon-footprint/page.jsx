@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Home, Volume2, VolumeX, Leaf, TrendingDown, TrendingUp } from "lucide-react";
 import audioManager from "@/lib/AudioManager";
+export const dynamic = 'force-dynamic';
 
 const scenarios = [
     {

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Flower2, Trophy, Heart, Volume2, VolumeX, Home, Sparkles } from "lucide-react";
 import audioManager from "@/lib/AudioManager";
+export const dynamic = 'force-dynamic';
 
 const pollinators = [
     { id: 1, emoji: "🐝", name: "Bee", type: "bee", fact: "Bees pollinate 80% of flowering plants worldwide!" },
