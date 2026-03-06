@@ -42,36 +42,6 @@ const games = [
         points: "Based on energy saved",
         color: "from-yellow-500 to-orange-500",
         path: "/dashboard/student/games/energy-saver"
-    },
-    {
-        id: "ocean",
-        title: "Ocean Cleanup Challenge",
-        description: "Click on floating trash to clean the ocean and build combos",
-        emoji: "🌊",
-        difficulty: "Medium",
-        points: "500+ with combos",
-        color: "from-blue-600 to-cyan-500",
-        path: "/dashboard/student/games/ocean-cleanup"
-    },
-    {
-        id: "tree",
-        title: "Tree Planting Simulator",
-        description: "Plant trees, manage resources, and grow a thriving forest",
-        emoji: "🌲",
-        difficulty: "Medium",
-        points: "300 per round",
-        color: "from-green-700 to-emerald-600",
-        path: "/dashboard/student/games/tree-planting"
-    },
-    {
-        id: "pollinator",
-        title: "Pollinator Patrol",
-        description: "Match pollinators with flowers in this educational puzzle game",
-        emoji: "🐝",
-        difficulty: "Easy to Medium",
-        points: "225 per level",
-        color: "from-pink-500 to-purple-600",
-        path: "/dashboard/student/games/pollinator-patrol"
     }
 ];
 

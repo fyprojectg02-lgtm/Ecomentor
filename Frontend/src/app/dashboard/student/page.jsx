@@ -478,7 +478,7 @@ function StudentDashboardContent() {
               Play All Games <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <a
               href="/dashboard/student/games/eco-quiz"
               className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 hover:shadow-lg hover:scale-105 transition-all"
@@ -525,18 +525,6 @@ function StudentDashboardContent() {
               <div className="flex items-center gap-2 text-white text-xs">
                 <Zap className="h-3 w-3" />
                 <span>Time-based</span>
-              </div>
-            </a>
-            <a
-              href="/dashboard/student/games/ocean-cleanup"
-              className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl p-6 hover:shadow-lg hover:scale-105 transition-all"
-            >
-              <div className="text-5xl mb-3">🌊</div>
-              <h4 className="text-lg font-bold text-white mb-1">Ocean Cleanup</h4>
-              <p className="text-cyan-100 text-sm mb-3">Clean the ocean</p>
-              <div className="flex items-center gap-2 text-white text-xs">
-                <Zap className="h-3 w-3" />
-                <span>500+ pts</span>
               </div>
             </a>
           </div>

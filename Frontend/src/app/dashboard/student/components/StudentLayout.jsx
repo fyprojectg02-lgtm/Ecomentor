@@ -188,13 +188,7 @@ export default function StudentLayout({ children }) {
         </div>
 
         <div className="mt-auto p-4 border-t border-[#111]">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors font-medium"
-          >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
+          
         </div>
       </aside>
 
@@ -230,6 +224,13 @@ export default function StudentLayout({ children }) {
                   </p>
                   <p className="text-[10px] text-gray-500">{user?.email}</p>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-2"
+                >
+                  <LogOut size={18} />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
               </div>
             </div>
           </nav>
