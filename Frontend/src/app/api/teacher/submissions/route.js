@@ -55,9 +55,13 @@ export async function GET(request) {
         const { db } = await connectToDatabase();
 
         // Build query for submissions
-        const query = {
-            classroomId: { $in: classroomIds }
-        };
+        let query = {};
+        if (classroomIds.length > 0) {
+            query.classroomId = { $in: [...classroomIds, null] };
+        } else {
+            // Teacher has no classrooms, show only global submissions (classroomId: null)
+            query.classroomId = null;
+        }
 
         // Filter by status
         if (status !== 'all') {
