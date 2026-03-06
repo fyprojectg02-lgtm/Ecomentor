@@ -11,6 +11,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const teacherId = searchParams.get('teacherId');
         const classroomId = searchParams.get('classroomId');
+        const fetchAll = searchParams.get('all') === 'true';
 
         if (!teacherId) {
             return NextResponse.json(
@@ -33,27 +34,31 @@ export async function GET(request) {
             );
         }
 
-        // Get teacher's classrooms if not specified
-        let classroomIds = [];
-        if (classroomId) {
-            classroomIds = [classroomId];
-        } else {
-            const { data: classrooms } = await supabase
-                .from('teacher_classrooms')
-                .select('classroom_id')
-                .eq('teacher_id', teacherId)
-                .eq('is_active', true);
+        // Get student user details
+        let detailsQuery = supabase
+            .from('user_details')
+            .select('user_id, education_level, classroom_id');
 
-            if (classrooms && classrooms.length > 0) {
-                classroomIds = classrooms.map(c => c.classroom_id);
+        if (!fetchAll) {
+            // Get teacher's classrooms if not specified
+            let classroomIds = [];
+            if (classroomId) {
+                classroomIds = [classroomId];
+            } else {
+                const { data: classrooms } = await supabase
+                    .from('teacher_classrooms')
+                    .select('classroom_id')
+                    .eq('teacher_id', teacherId)
+                    .eq('is_active', true);
+
+                if (classrooms && classrooms.length > 0) {
+                    classroomIds = classrooms.map(c => c.classroom_id);
+                }
             }
+            detailsQuery = detailsQuery.in('classroom_id', classroomIds);
         }
 
-        // Get students from these classrooms
-        const { data: userDetails, error: detailsError } = await supabase
-            .from('user_details')
-            .select('user_id, education_level, classroom_id')
-            .in('classroom_id', classroomIds);
+        const { data: userDetails, error: detailsError } = await detailsQuery;
 
         if (detailsError) {
             console.error('Error fetching user details:', detailsError);

@@ -25,7 +25,7 @@ export default function TeacherDashboard() {
     activeLessonPlans: 0,
     totalClassPoints: 0
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,19 +38,10 @@ export default function TeacherDashboard() {
       if (user) {
         setUser(user);
 
-        // Fetch all students count (not specific to teacher)
-        const { count: totalStudentsCount, error: studentsError } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('role', 'student');
-
-        if (studentsError) {
-          console.error('Error fetching total students:', studentsError);
-        }
-
-        // Fetch teacher's students for class points calculation
-        const studentsRes = await fetch(`/api/teacher/students?teacherId=${user.id}`);
+        // Fetch all students for the student list
+        const studentsRes = await fetch(`/api/teacher/students?teacherId=${user.id}&all=true`);
         const studentsData = await studentsRes.json();
+        const teacherStudents = studentsData.students || [];
 
         // Fetch pending submissions
         const submissionsRes = await fetch(`/api/teacher/submissions?teacherId=${user.id}`);
@@ -63,12 +54,13 @@ export default function TeacherDashboard() {
           .eq('teacher_id', user.id);
 
         setStats({
-          totalStudents: totalStudentsCount || 0,
+          totalStudents: studentsData.total || 0,
           pendingReviews: submissionsData.submissions?.length || 0,
           activeLessonPlans: lessonPlans?.length || 0,
-          totalClassPoints: studentsData.students?.reduce((sum, s) => sum + s.ecoPoints, 0) || 0
+          totalClassPoints: teacherStudents.reduce((sum, s) => sum + s.ecoPoints, 0) || 0
         });
 
+        setStudents(teacherStudents);
         setLoading(false);
       }
     } catch (error) {
@@ -235,52 +227,112 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-[#0f0f0f]/40 backdrop-blur-md rounded-[2.5rem] border border-white/5 p-10 hover:bg-[#121212]/60 transition-all animate-in fade-in slide-in-from-bottom duration-1000 delay-200">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
-            <div>
-              <h2 className="text-3xl font-black text-white tracking-tight">System Status</h2>
-              <p className="text-gray-500 text-sm mt-1">Real-time overview of your actions</p>
-            </div>
-            {stats.pendingReviews > 0 && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-5 py-2 flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">Action Required</span>
+        {/* All Students */}
+        <div className="mb-12 animate-in fade-in slide-in-from-bottom duration-1000 delay-100">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white tracking-tight">All Students</h2>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1">
+                <span className="text-emerald-400 text-xs font-bold">{stats.totalStudents} TOTAL</span>
               </div>
-            )}
+            </div>
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-white/10 to-transparent ml-6" />
           </div>
 
-          <div className="space-y-4">
-            {stats.pendingReviews > 0 ? (
-              <div className="group flex items-center gap-6 p-6 bg-white/5 hover:bg-white/[0.08] border border-white/5 rounded-[2rem] transition-all hover:translate-x-2">
-                <div className="h-16 w-16 rounded-[1.25rem] bg-amber-500/20 flex items-center justify-center shrink-0">
-                  <AlertCircle className="h-8 w-8 text-amber-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xl font-bold text-white mb-1">
-                    {stats.pendingReviews} Submission{stats.pendingReviews > 1 ? 's' : ''} Awaiting
-                  </p>
-                  <p className="text-gray-400">Review student eco-actions to award points and provide feedback.</p>
-                </div>
-                <Link
-                  href="/dashboard/teacher/review-actions"
-                  className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-[#04210f] rounded-2xl font-black transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-500/20"
-                >
-                  REVIEW NOW
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center gap-6 p-8 bg-white/5 border border-white/5 rounded-[2rem]">
-                <div className="h-16 w-16 rounded-[1.25rem] bg-emerald-500/20 flex items-center justify-center shrink-0">
-                  <CheckCircle className="h-8 w-8 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-white mb-1">Queue is Empty</p>
-                  <p className="text-gray-500">Excellent! You've successfully reviewed all pending submissions.</p>
-                </div>
-              </div>
-            )}
+          <div className="bg-[#0f0f0f]/40 backdrop-blur-md rounded-[2.5rem] border border-white/5 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/5">
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Student Name</th>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Level</th>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider text-center">Eco Points</th>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider text-center">Tasks Done</th>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider text-right">Impact</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {students.length > 0 ? (
+                    students.map((student, i) => (
+                      <tr key={student.id} className="group hover:bg-white/[0.02] transition-colors">
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 flex items-center justify-center font-bold text-emerald-400">
+                              {student.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-white group-hover:text-emerald-400 transition-colors">{student.name}</p>
+                              <p className="text-xs text-gray-500">{student.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20 uppercase">
+                            {student.educationLevel}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Award className="h-4 w-4 text-emerald-500" />
+                            <span className="font-black text-white text-lg">{student.ecoPoints}</span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5 text-center">
+                          <span className="font-bold text-gray-300">{student.completedTasks}</span>
+                        </td>
+                        <td className="px-8 py-5 text-right">
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-xs text-emerald-400 font-medium">CO2: {student.environmentalImpact.co2Saved.toFixed(1)}kg</span>
+                            <span className="text-[10px] text-gray-500 leading-none">Trees: {student.environmentalImpact.treesPlanted.toFixed(1)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="px-8 py-10 text-center text-gray-500 italic">
+                        No students enrolled in your classrooms yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+        </div>
+
+        {/* System Status */}
+
+        <div className="space-y-4">
+          {stats.pendingReviews > 0 ? (
+            <div className="group flex items-center gap-6 p-6 bg-white/5 hover:bg-white/[0.08] border border-white/5 rounded-[2rem] transition-all hover:translate-x-2">
+              <div className="h-16 w-16 rounded-[1.25rem] bg-amber-500/20 flex items-center justify-center shrink-0">
+                <AlertCircle className="h-8 w-8 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xl font-bold text-white mb-1">
+                  {stats.pendingReviews} Submission{stats.pendingReviews > 1 ? 's' : ''} Awaiting
+                </p>
+                <p className="text-gray-400">Review student eco-actions to award points and provide feedback.</p>
+              </div>
+              <Link
+                href="/dashboard/teacher/review-actions"
+                className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-[#04210f] rounded-2xl font-black transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-500/20"
+              >
+                REVIEW NOW
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-6 p-8 bg-white/5 border border-white/5 rounded-[2rem]">
+              <div className="h-16 w-16 rounded-[1.25rem] bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <CheckCircle className="h-8 w-8 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-white mb-1">Queue is Empty</p>
+                <p className="text-gray-500">Excellent! You've successfully reviewed all pending submissions.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
