@@ -84,10 +84,23 @@ export async function GET(request) {
       .limit(100)
       .toArray();
 
-    // Convert ObjectId to string for JSON serialization
+    // Fetch all students' names from Supabase to fix "Unknown" names
+    const studentIds = [...new Set(submissions.map(s => s.studentId))];
+    const { data: studentsInfo } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', studentIds);
+
+    const nameMap = (studentsInfo || []).reduce((acc, s) => {
+      acc[s.id] = s.full_name;
+      return acc;
+    }, {});
+
+    // Convert ObjectId to string for JSON serialization and add student names
     const serializedSubmissions = submissions.map(sub => ({
       ...sub,
       _id: sub._id.toString(),
+      studentName: nameMap[sub.studentId] || sub.studentName || 'Unknown',
       studentId: typeof sub.studentId === 'object' ? sub.studentId.toString() : sub.studentId,
       classroomId: sub.classroomId && typeof sub.classroomId === 'object' ? sub.classroomId.toString() : sub.classroomId
     }));
