@@ -52,6 +52,8 @@ export async function GET(request) {
             error = rpcError;
         }
 
+        console.log(`Leaderboard API: Fetched ${leaderboardData?.length || 0} entries for scope: ${scope}`);
+
         if (error) {
             console.error("Error fetching leaderboard:", error);
             return NextResponse.json(
@@ -92,8 +94,7 @@ export async function GET(request) {
         // Get total count for pagination
         const { count } = await supabase
             .from('students')
-            .select('*', { count: 'exact', head: true })
-            .gt('eco_points', 0);
+            .select('*', { count: 'exact', head: true });
 
         // Format the response
         const formattedLeaderboard = leaderboardData.map(entry => ({

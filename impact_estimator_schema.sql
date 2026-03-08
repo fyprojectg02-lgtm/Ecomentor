@@ -137,7 +137,6 @@ FROM students s
 JOIN profiles p ON p.id = s.id
 LEFT JOIN user_details ud ON ud.user_id = s.id
 LEFT JOIN impact_metrics im ON im.student_id = s.id
-WHERE s.eco_points > 0
 ORDER BY s.eco_points DESC, s.created_at ASC;
 
 -- Create unique index for concurrent refresh
@@ -295,7 +294,7 @@ BEGIN
   WHERE l.student_id = p_student_id;
 
   -- Get total students
-  SELECT COUNT(*) INTO v_total FROM students WHERE eco_points > 0;
+  SELECT COUNT(*) INTO v_total FROM students;
 
   -- Calculate percentile
   v_percentile := CASE 
@@ -383,7 +382,6 @@ SELECT
 FROM students s
 JOIN profiles p ON p.id = s.id
 LEFT JOIN user_details ud ON ud.user_id = s.id
-WHERE s.weekly_points > 0
 ORDER BY s.weekly_points DESC
 LIMIT 50;
 

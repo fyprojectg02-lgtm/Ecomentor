@@ -177,7 +177,7 @@ export default function Leaderboard() {
                                 <div>
                                     <p className="text-white font-semibold">Your Rank</p>
                                     <p className="text-sm text-gray-400">
-                                        Top {currentUser.percentile}% • {currentUser.ecoPoints} points
+                                       {currentUser.ecoPoints} points
                                     </p>
                                 </div>
                             </div>
