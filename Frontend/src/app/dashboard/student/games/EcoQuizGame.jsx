@@ -201,9 +201,9 @@ export default function EcoQuizGame() {
                         <h1 className="text-4xl font-bold text-white flex items-center gap-3">
                             🎯 Eco Quiz Challenge
                         </h1>
-                        <a href="/dashboard/student?tab=home" className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
+                        <a href="/dashboard/student/games" className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
                             <Home className="h-5 w-5" />
-                            Back to Dashboard
+                            Back to Games
                         </a>
                     </div>
 
@@ -287,10 +287,10 @@ export default function EcoQuizGame() {
                                 Play Again
                             </button>
                             <a
-                                href="/dashboard/student?tab=home"
+                                href="/dashboard/student/games"
                                 className="flex-1 bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center"
                             >
-                                Back to Dashboard
+                                Back to Games
                             </a>
                         </div>
                     </div>
@@ -317,12 +317,21 @@ export default function EcoQuizGame() {
                             <span className={`font-bold ${timeLeft < 10 ? 'text-red-400' : 'text-white'}`}>{timeLeft}s</span>
                         </div>
                     </div>
-                    <button
-                        onClick={toggleMute}
-                        className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl p-2 hover:bg-[#1a1a1a] transition-colors"
-                    >
-                        {isMuted ? <VolumeX className="h-5 w-5 text-gray-400" /> : <Volume2 className="h-5 w-5 text-emerald-400" />}
-                    </button>
+                    <div className="flex flex-col items-end gap-2">
+                        <button
+                            onClick={toggleMute}
+                            className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl p-2 hover:bg-[#1a1a1a] transition-colors"
+                        >
+                            {isMuted ? <VolumeX className="h-5 w-5 text-gray-400" /> : <Volume2 className="h-5 w-5 text-emerald-400" />}
+                        </button>
+                        <a
+                            href="/dashboard/student/games"
+                            className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl px-3 py-2 hover:bg-[#1a1a1a] transition-colors text-emerald-400 hover:text-emerald-300 flex items-center gap-2 text-sm font-medium"
+                        >
+                            <Home className="h-4 w-4" />
+                            Back to Games
+                        </a>
+                    </div>
                 </div>
 
                 {/* Progress Bar */}

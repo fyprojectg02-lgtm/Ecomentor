@@ -130,9 +130,9 @@ export default function EnergySaverGame() {
                         <h1 className="text-4xl font-bold text-white flex items-center gap-3">
                             ⚡ Energy Saver Challenge
                         </h1>
-                        <a href="/dashboard/student?tab=home" className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
+                        <a href="/dashboard/student/games" className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
                             <Home className="h-5 w-5" />
-                            Back to Dashboard
+                            Back to Games
                         </a>
                     </div>
 
@@ -202,10 +202,10 @@ export default function EnergySaverGame() {
                                 Play Again
                             </button>
                             <a
-                                href="/dashboard/student?tab=home"
+                                href="/dashboard/student/games"
                                 className="flex-1 bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center"
                             >
-                                Back to Dashboard
+                                Back to Games
                             </a>
                         </div>
                     </div>
@@ -236,12 +236,21 @@ export default function EnergySaverGame() {
                             <span className="text-white font-bold">{energySaved}W saved</span>
                         </div>
                     </div>
-                    <button
-                        onClick={toggleMute}
-                        className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl p-2 hover:bg-[#1a1a1a] transition-colors"
-                    >
-                        {isMuted ? <VolumeX className="h-5 w-5 text-gray-400" /> : <Volume2 className="h-5 w-5 text-yellow-400" />}
-                    </button>
+                    <div className="flex flex-col items-end gap-2">
+                        <button
+                            onClick={toggleMute}
+                            className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl p-2 hover:bg-[#1a1a1a] transition-colors"
+                        >
+                            {isMuted ? <VolumeX className="h-5 w-5 text-gray-400" /> : <Volume2 className="h-5 w-5 text-yellow-400" />}
+                        </button>
+                        <a
+                            href="/dashboard/student/games"
+                            className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl px-3 py-2 hover:bg-[#1a1a1a] transition-colors text-emerald-400 hover:text-emerald-300 flex items-center gap-2 text-sm font-medium"
+                        >
+                            <Home className="h-4 w-4" />
+                            Back to Games
+                        </a>
+                    </div>
                 </div>
 
                 {/* Energy Meter */}
@@ -276,8 +285,8 @@ export default function EnergySaverGame() {
                             key={appliance.id}
                             onClick={() => toggleAppliance(appliance.id)}
                             className={`rounded-2xl p-6 transition-all transform hover:scale-105 ${appliance.on
-                                    ? 'bg-gradient-to-br from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
-                                    : 'bg-[#1a1a1a] border border-[#2a2a2a]'
+                                ? 'bg-gradient-to-br from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
+                                : 'bg-[#1a1a1a] border border-[#2a2a2a]'
                                 }`}
                         >
                             <div className={`text-5xl mb-2 ${appliance.on ? 'animate-pulse' : 'opacity-50'}`}>
