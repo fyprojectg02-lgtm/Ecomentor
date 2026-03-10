@@ -12,7 +12,9 @@ import {
   CheckCircle,
   Loader2,
   Trash2,
-  Edit
+  Edit,
+  Check,
+  XCircle
 } from "lucide-react";
 
 export default function ManageOpportunities() {
@@ -37,11 +39,68 @@ export default function ManageOpportunities() {
     deadline: ""
   });
   const [perkInput, setPerkInput] = useState("");
+  const [applications, setApplications] = useState([]);
+  const [fetchingApps, setFetchingApps] = useState(false);
+  const [updatingApp, setUpdatingApp] = useState(null);
 
   useEffect(() => {
     fetchUser();
     fetchOpportunities();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchApplications();
+    }
+  }, [user]);
+
+  const fetchApplications = async () => {
+    if (!user) return;
+    try {
+      setFetchingApps(true);
+      const response = await fetch(`/api/teacher/applications?teacherId=${user.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setApplications(data.applications);
+      }
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+    } finally {
+      setFetchingApps(false);
+    }
+  };
+
+  const handleStatusUpdate = async (applicationId, newStatus) => {
+    if (!user) return;
+
+    setUpdatingApp(applicationId);
+    try {
+      const response = await fetch('/api/teacher/applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId,
+          status: newStatus,
+          teacherId: user.id
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Update local state to reflect change immediately
+        setApplications(prev => prev.map(app =>
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        ));
+      } else {
+        alert("Error updating status: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      alert("Failed to update status");
+    } finally {
+      setUpdatingApp(null);
+    }
+  };
 
   const fetchUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -57,7 +116,7 @@ export default function ManageOpportunities() {
       setLoading(true);
       const response = await fetch("/api/opportunities");
       const data = await response.json();
-      
+
       if (data.success) {
         // Filter to show only opportunities created by this teacher
         const { data: { user } } = await supabase.auth.getUser();
@@ -121,7 +180,7 @@ export default function ManageOpportunities() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!user) return;
 
     setSaving(true);
@@ -142,6 +201,7 @@ export default function ManageOpportunities() {
         alert("Opportunity created successfully!");
         resetForm();
         fetchOpportunities();
+        fetchApplications();
       } else {
         alert("Error: " + data.error);
       }
@@ -169,7 +229,7 @@ export default function ManageOpportunities() {
         .eq("teacher_id", user.id);
 
       if (error) throw error;
-      
+
       alert("Opportunity deleted successfully!");
       fetchOpportunities();
     } catch (error) {
@@ -439,7 +499,7 @@ export default function ManageOpportunities() {
         {/* Opportunities List */}
         <div className="bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a] p-6">
           <h2 className="text-2xl font-bold text-white mb-6">Your Opportunities</h2>
-          
+
           {loading ? (
             <div className="text-center py-12">
               <Loader2 className="h-8 w-8 text-emerald-400 animate-spin mx-auto mb-4" />
@@ -495,6 +555,88 @@ export default function ManageOpportunities() {
                     <Trash2 className="h-4 w-4" />
                     Delete
                   </button>
+
+                  {/* Applications Section */}
+                  <div className="mt-6 pt-4 border-t border-[#2a2a2a]">
+                    <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                      Applied Students ({applications.filter(a => a.opportunity_id === opp.id).length})
+                    </h4>
+
+                    {fetchingApps ? (
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading...
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {applications.filter(a => a.opportunity_id === opp.id).length > 0 ? (
+                          applications
+                            .filter(a => a.opportunity_id === opp.id)
+                            .map((app) => (
+                              <div key={app.id} className="bg-black/40 rounded-lg p-3 border border-[#222]">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="text-sm font-medium text-white">{app.student.name}</p>
+                                    <p className="text-xs text-gray-400">{app.student.email}</p>
+                                    <p className="text-[10px] text-gray-500 mt-1">
+                                      Applied on: {new Date(app.created_at).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${app.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
+                                    app.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                      app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                                        'bg-gray-500/20 text-gray-400'
+                                    }`}>
+                                    {app.status}
+                                  </span>
+                                </div>
+
+                                {app.status === 'pending' && (
+                                  <div className="flex gap-2 mt-3">
+                                    <button
+                                      onClick={() => handleStatusUpdate(app.id, 'accepted')}
+                                      disabled={updatingApp === app.id}
+                                      className="flex-1 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 border border-green-500/20"
+                                    >
+                                      {updatingApp === app.id ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Check className="h-3 w-3" />
+                                          Accept
+                                        </>
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={() => handleStatusUpdate(app.id, 'rejected')}
+                                      disabled={updatingApp === app.id}
+                                      className="flex-1 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 border border-red-500/20"
+                                    >
+                                      {updatingApp === app.id ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <XCircle className="h-3 w-3" />
+                                          Reject
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+
+                                {app.application_message && (
+                                  <p className="text-xs text-gray-400 mt-2 italic bg-[#0a0a0a] p-2 rounded border border-[#1a1a1a]">
+                                    "{app.application_message}"
+                                  </p>
+                                )}
+                              </div>
+                            ))
+                        ) : (
+                          <p className="text-xs text-gray-500 italic">No students applied yet</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

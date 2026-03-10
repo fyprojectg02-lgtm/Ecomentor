@@ -325,19 +325,7 @@ export default function NGOOpportunities() {
             </div>
           </div>
 
-          <div className="bg-[#0f0f0f] rounded-xl border border-[#1a1a1a] p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white">
-                  {filteredOpportunities.filter(o => !isEligible(o.minPoints)).length}
-                </p>
-                <p className="text-sm text-gray-400">Unlock Soon</p>
-              </div>
-            </div>
-          </div>
+         
         </div>
 
         {/* Opportunities Grid */}
