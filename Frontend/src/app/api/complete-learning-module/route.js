@@ -64,16 +64,81 @@ export async function POST(request) {
 
         let completedModules = existingProgress?.completed_modules || [];
 
-        // Add module to completed list if not already there
-        if (!completedModules.includes(moduleIndex)) {
-            completedModules.push(moduleIndex);
+        // Check if module is already completed
+        if (completedModules.includes(moduleIndex)) {
+            return NextResponse.json({
+                success: true,
+                pointsEarned: 0,
+                bonusPoints: 0,
+                totalPointsEarned: 0,
+                newTotalPoints: existingProgress?.points_earned || 0,
+                message: "Module already completed"
+            });
         }
+
+        // Add module to completed list
+        completedModules.push(moduleIndex);
 
         const totalModules = modules.length;
         const progressPercentage = Math.round((completedModules.length / totalModules) * 100);
         const isPathComplete = progressPercentage >= 100;
 
-        // Upsert progress
+        // Calculate bonus points if completing the path
+        let bonusPoints = 0;
+        if (isPathComplete && !existingProgress?.completed_at) {
+            const difficultyBonus = {
+                'beginner': 100,
+                'intermediate': 200,
+                'advanced': 300
+            };
+            bonusPoints = difficultyBonus[learningPath.difficulty] || 150;
+        }
+
+        // Award points for module
+        const { data: pointsData, error: pointsError } = await supabase.rpc('award_points', {
+            p_student_id: studentId,
+            p_points: pointsEarned,
+            p_activity_type: 'learning_path',
+            p_activity_id: `${learningPathId}_module_${moduleIndex}`,
+            p_metadata: {
+                learningPathTitle: learningPath.title,
+                moduleTitle: module.title,
+                moduleIndex: moduleIndex,
+                progressPercentage: progressPercentage
+            }
+        });
+
+        if (pointsError) {
+            console.error("Error awarding points:", pointsError);
+            return NextResponse.json(
+                { success: false, error: pointsError.message },
+                { status: 500 }
+            );
+        }
+
+        let finalPointsResult = pointsData[0];
+
+        // Award bonus if applicable
+        if (bonusPoints > 0) {
+            const { data: bonusData, error: bonusError } = await supabase.rpc('award_points', {
+                p_student_id: studentId,
+                p_points: bonusPoints,
+                p_activity_type: 'bonus',
+                p_activity_id: learningPathId,
+                p_metadata: {
+                    reason: 'Learning Path Completion',
+                    learningPathTitle: learningPath.title
+                }
+            });
+
+            if (!bonusError && bonusData && bonusData.length > 0) {
+                finalPointsResult = bonusData[0];
+            } else if (bonusError) {
+                console.error("Error awarding bonus points:", bonusError);
+            }
+        }
+
+        // Upsert progress with correct total points (including bonus)
         const { error: progressError } = await supabase
             .from('student_learning_progress')
             .upsert({
@@ -82,9 +147,9 @@ export async function POST(request) {
                 progress_percentage: progressPercentage,
                 current_module: moduleIndex + 1,
                 completed_modules: completedModules,
-                points_earned: (existingProgress?.points_earned || 0) + pointsEarned,
+                points_earned: (existingProgress?.points_earned || 0) + pointsEarned + bonusPoints,
                 last_activity: new Date().toISOString(),
-                completed_at: isPathComplete ? new Date().toISOString() : null
+                completed_at: isPathComplete ? (existingProgress?.completed_at || new Date().toISOString()) : null
             }, {
                 onConflict: 'student_id,learning_path_id'
             });
@@ -114,49 +179,6 @@ export async function POST(request) {
             console.error("Error recording completion:", completionError);
         }
 
-        // Award points for module
-        const { data: pointsData, error: pointsError } = await supabase.rpc('award_points', {
-            p_student_id: studentId,
-            p_points: pointsEarned,
-            p_activity_type: 'learning_path',
-            p_activity_id: `${learningPathId}_module_${moduleIndex}`,
-            p_metadata: {
-                learningPathTitle: learningPath.title,
-                moduleTitle: module.title,
-                moduleIndex: moduleIndex,
-                progressPercentage: progressPercentage
-            }
-        });
-
-        if (pointsError) {
-            console.error("Error awarding points:", pointsError);
-            return NextResponse.json(
-                { success: false, error: pointsError.message },
-                { status: 500 }
-            );
-        }
-
-        // If path is complete, award bonus points
-        let bonusPoints = 0;
-        if (isPathComplete && !existingProgress?.completed_at) {
-            const difficultyBonus = {
-                'beginner': 100,
-                'intermediate': 200,
-                'advanced': 300
-            };
-            bonusPoints = difficultyBonus[learningPath.difficulty] || 150;
-
-            await supabase.rpc('award_points', {
-                p_student_id: studentId,
-                p_points: bonusPoints,
-                p_activity_type: 'bonus',
-                p_activity_id: learningPathId,
-                p_metadata: {
-                    reason: 'Learning Path Completion',
-                    learningPathTitle: learningPath.title
-                }
-            });
-        }
 
         // Calculate updated impact metrics
         const { data: impactData, error: impactError } = await supabase.rpc('calculate_impact_metrics', {
@@ -174,14 +196,14 @@ export async function POST(request) {
             };
         }
 
-        const result = pointsData[0];
+        const result = finalPointsResult;
 
         return NextResponse.json({
             success: true,
             pointsEarned: pointsEarned,
             bonusPoints: bonusPoints,
             totalPointsEarned: pointsEarned + bonusPoints,
-            newTotalPoints: result.new_total_points + bonusPoints,
+            newTotalPoints: result.new_total_points,
             newRank: result.new_rank,
             impactMetrics: updatedImpact,
             progressPercentage: progressPercentage,

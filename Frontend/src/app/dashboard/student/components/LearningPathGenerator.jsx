@@ -355,7 +355,7 @@ export default function LearningPathGenerator({ userId }) {
             const isTeacherPlan = path?.is_teacher_plan;
 
             let enrollmentSuccess = false;
-            
+
             if (isTeacherPlan) {
                 // For teacher lesson plans, use lesson_plan_progress table
                 const { error } = await supabase
@@ -408,7 +408,7 @@ export default function LearningPathGenerator({ userId }) {
 
             // Always refresh enrolled paths to update UI, even if already enrolled
             await fetchEnrolledPaths();
-            
+
             if (enrollmentSuccess) {
                 alert("Successfully enrolled in learning path!");
             }
@@ -446,18 +446,18 @@ export default function LearningPathGenerator({ userId }) {
                     pointsEarned: data.totalPointsEarned,
                     newTotal: data.newTotalPoints,
                     rankChange: null,
-                    achievement: achievementText,
+                    achievement: data.bonusPoints > 0 ? `Bonus: +${data.bonusPoints} for completing path!` : achievementText,
                     activityType: isTeacherPlan ? 'lesson_plan' : 'learning_path'
                 });
                 setShowPointsNotification(true);
-                
+
                 // Small delay to ensure database update completes
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
+
                 // Refresh both enrolled and completed paths
                 await fetchEnrolledPaths();
                 await fetchCompletedPaths();
-                
+
                 // If the path is completed, refresh learning paths to filter it out
                 if (data.isLessonComplete || data.isPathComplete) {
                     // Refetch existing paths without regenerating
@@ -707,16 +707,16 @@ export default function LearningPathGenerator({ userId }) {
                             <h4 className="text-lg font-bold text-white">Modules</h4>
                             {Array.isArray(selectedPath.modules) && selectedPath.modules.map((module, index) => {
                                 // Check if this module is completed
-                                const enrolledPath = enrolledPaths.find(ep => 
+                                const enrolledPath = enrolledPaths.find(ep =>
                                     ep.learning_path_id === selectedPath.id || ep.lesson_plan_id === selectedPath.id
                                 );
-                                
+
                                 // Check if module is completed
                                 let isModuleCompleted = false;
                                 if (enrolledPath) {
                                     // Check if this is a teacher lesson plan (either from enrolledPath flag or selectedPath flag)
                                     const isTeacherPlan = enrolledPath.is_lesson_plan || selectedPath.is_teacher_plan;
-                                    
+
                                     if (isTeacherPlan) {
                                         // For lesson plans, check completed_activities array
                                         const completedActivities = enrolledPath.completed_activities || [];
@@ -761,11 +761,10 @@ export default function LearningPathGenerator({ userId }) {
                                                 completeModule(selectedPath.id, index);
                                             }}
                                             disabled={completingModule === `${selectedPath.id}-${index}` || isModuleCompleted}
-                                            className={`w-full mt-3 font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                                isModuleCompleted 
-                                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-not-allowed" 
+                                            className={`w-full mt-3 font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isModuleCompleted
+                                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-not-allowed"
                                                     : "bg-emerald-500 hover:bg-emerald-400 text-[#04210f]"
-                                            }`}
+                                                }`}
                                         >
                                             {completingModule === `${selectedPath.id}-${index}` ? (
                                                 <>
