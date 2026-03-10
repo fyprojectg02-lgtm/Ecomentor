@@ -19,13 +19,15 @@ export async function POST(request) {
             additionalContext
         } = body;
 
-        // Validate required fields (educationLevel is now optional)
-        if (!teacherId || !subject || !gradeLevel) {
+        // Validate required fields (educationLevel and gradeLevel are now optional)
+        if (!teacherId || !subject) {
             return NextResponse.json(
-                { success: false, error: 'Missing required fields: teacherId, subject, gradeLevel' },
+                { success: false, error: 'Missing required fields: teacherId, subject' },
                 { status: 400 }
             );
         }
+
+        const effectiveGradeLevel = gradeLevel || 'General';
 
         // Verify teacher role
         const { data: profile, error: profileError } = await supabase
@@ -44,7 +46,7 @@ export async function POST(request) {
         // Generate lesson plan using Gemini AI
         const lessonPlan = await generateLessonPlanWithAI({
             subject,
-            gradeLevel,
+            gradeLevel: effectiveGradeLevel,
             educationLevel,
             duration: duration || '45 minutes',
             learningObjectives: learningObjectives || [],
@@ -58,7 +60,7 @@ export async function POST(request) {
                 teacher_id: teacherId,
                 title: lessonPlan.title,
                 subject: subject,
-                grade_level: gradeLevel,
+                grade_level: effectiveGradeLevel,
                 education_level: educationLevel || 'all', // Default to 'all' if not specified
                 duration: duration || '45 minutes',
                 learning_objectives: lessonPlan.learningObjectives,
@@ -69,7 +71,7 @@ export async function POST(request) {
                 homework_assignment: lessonPlan.homeworkAssignment,
                 additional_resources: lessonPlan.additionalResources,
                 ai_generated: true,
-                ai_prompt: JSON.stringify({ subject, gradeLevel, educationLevel, duration, learningObjectives, additionalContext }),
+                ai_prompt: JSON.stringify({ subject, gradeLevel: effectiveGradeLevel, educationLevel, duration, learningObjectives, additionalContext }),
                 is_published: false
             })
             .select()
@@ -140,7 +142,7 @@ Generate a detailed lesson plan with the following structure (respond ONLY with 
   "additionalResources": ["resource 1", "resource 2"]
 }
 
-Make it appropriate for ${educationLevel} level (${gradeLevel}). Include eco-friendly and sustainability themes where relevant.`;
+Make it appropriate for ${educationLevel} level${gradeLevel ? ` (${gradeLevel})` : ''}. Include eco-friendly and sustainability themes where relevant.`;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
 

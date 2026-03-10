@@ -37,7 +37,7 @@ export default function LessonPlannerPage() {
     // Form state
     const [formData, setFormData] = useState({
         subject: "",
-        gradeLevel: "",
+        gradeLevel: "General",
         educationLevel: "school",
         duration: "45 minutes",
         learningObjectives: [""],
@@ -112,8 +112,8 @@ export default function LessonPlannerPage() {
     };
 
     const handleGenerate = async () => {
-        if (!formData.subject || !formData.gradeLevel) {
-            alert("Please fill in subject and grade level");
+        if (!formData.subject) {
+            alert("Please fill in the subject");
             return;
         }
 
@@ -279,24 +279,8 @@ export default function LessonPlannerPage() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    {/* Grade Level */}
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5 group-focus-within:text-emerald-400 transition-colors">
-                                            <Award className="h-3.5 w-3.5" />
-                                            Grade
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="gradeLevel"
-                                            value={formData.gradeLevel}
-                                            onChange={handleInputChange}
-                                            placeholder="Grade 8"
-                                            className="w-full bg-black/40 border border-white/10 hover:border-white/20 text-white rounded-xl p-3.5 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-600"
-                                        />
-                                    </div>
-
-                                    {/* Duration */}
-                                    <div className="group">
+                                    {/* Duration - Now spanning full width or adjusted layout */}
+                                    <div className="group col-span-2">
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5 group-focus-within:text-emerald-400 transition-colors">
                                             <Clock className="h-3.5 w-3.5" />
                                             Duration
@@ -355,7 +339,7 @@ export default function LessonPlannerPage() {
                                 {/* Generate Button */}
                                 <button
                                     onClick={handleGenerate}
-                                    disabled={loading || !formData.subject || !formData.gradeLevel}
+                                    disabled={loading || !formData.subject}
                                     className="w-full mt-2 relative group overflow-hidden bg-emerald-500 disabled:bg-white/10 disabled:cursor-not-allowed text-emerald-950 py-4 rounded-2xl font-bold text-base transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>

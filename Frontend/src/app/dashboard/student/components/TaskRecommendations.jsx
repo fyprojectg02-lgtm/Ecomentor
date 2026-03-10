@@ -360,7 +360,7 @@ export default function TaskRecommendations({ userId, educationLevel }) {
                             </div>
                         )}
 
-                        {/* Impact Metrics */}
+                        {/* Impact Metrics
                         {(selectedTask.impact_metrics || selectedTask.impactMetrics) && (
                             <div className="mb-6">
                                 <h4 className="text-lg font-bold text-white mb-3">Environmental Impact</h4>
@@ -373,7 +373,7 @@ export default function TaskRecommendations({ userId, educationLevel }) {
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Instructions */}
                         {selectedTask.instructions && (
