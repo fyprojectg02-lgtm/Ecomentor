@@ -109,7 +109,7 @@ export async function POST(req) {
         }
 
         // Generate AI recommendations
-        const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
         const prompt = `
 You are recommending eco-actions for a student on the EcoMentor platform.

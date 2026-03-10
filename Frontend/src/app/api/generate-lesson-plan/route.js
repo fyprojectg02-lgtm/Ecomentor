@@ -142,7 +142,7 @@ Generate a detailed lesson plan with the following structure (respond ONLY with 
 
 Make it appropriate for ${educationLevel} level (${gradeLevel}). Include eco-friendly and sustainability themes where relevant.`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
 
         const response = await fetch(url, {
             method: 'POST',

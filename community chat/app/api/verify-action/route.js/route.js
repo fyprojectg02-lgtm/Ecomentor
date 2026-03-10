@@ -149,7 +149,7 @@ export async function POST(request) {
 async function verifyWithGemini({ actionType, description, location, date, estimatedImpact, images }) {
   try {
     // Use Gemini Pro Vision model
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     // Prepare images for Gemini (convert base64 to proper format)
     const imageParts = images.slice(0, 3).map(base64Image => {

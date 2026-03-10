@@ -78,7 +78,7 @@ export async function POST(req) {
         }
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-3-flash-preview",
+            model: "gemini-2.5-Flash-Lite",
             systemInstruction: {
                 parts: [{
                     text: `

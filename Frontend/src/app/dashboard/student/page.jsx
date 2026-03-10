@@ -348,7 +348,7 @@ function StudentDashboardContent() {
                   </div>
                 </div>
                 <a
-                  href="/dashboard/student/learning"
+                  href="/dashboard/student/?tab=learning-paths"
                   className="mt-4 w-full inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-[#04210f] py-2 rounded-xl font-semibold transition-colors"
                 >
                   {path.progress > 0 ? "Continue" : "Start Learning"}
