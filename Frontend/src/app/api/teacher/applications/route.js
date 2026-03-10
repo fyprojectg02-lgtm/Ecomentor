@@ -192,7 +192,73 @@ export async function PATCH(request) {
             );
         }
 
-        // 3. Update status
+        // 3. Get current application and opportunity details for point deduction
+        const { data: appData, error: appFetchError } = await supabase
+            .from('opportunity_applications')
+            .select('status, student_id, opportunity_id')
+            .eq('id', applicationId)
+            .single();
+
+        if (appFetchError || !appData) {
+            return NextResponse.json(
+                { success: false, error: 'Application details not found' },
+                { status: 404 }
+            );
+        }
+
+        // Only deduct points if status is changing TO accepted and it wasn't already accepted
+        if (status === 'accepted' && appData.status !== 'accepted') {
+            const { data: oppData, error: oppFetchError } = await supabase
+                .from('ngo_opportunities')
+                .select('min_points')
+                .eq('id', appData.opportunity_id)
+                .single();
+
+            if (oppFetchError || !oppData) {
+                return NextResponse.json(
+                    { success: false, error: 'Opportunity details not found for point deduction' },
+                    { status: 404 }
+                );
+            }
+
+            // Deduct points from student
+            const { data: studentData, error: studentFetchError } = await supabase
+                .from('students')
+                .select('eco_points')
+                .eq('id', appData.student_id)
+                .single();
+
+            if (studentFetchError || !studentData) {
+                return NextResponse.json(
+                    { success: false, error: 'Student details not found for point deduction' },
+                    { status: 404 }
+                );
+            }
+
+            if (studentData.eco_points < oppData.min_points) {
+                return NextResponse.json(
+                    { success: false, error: `Student does not have enough points. Required: ${oppData.min_points}, Current: ${studentData.eco_points}` },
+                    { status: 400 }
+                );
+            }
+
+            const { error: deductError } = await supabase
+                .from('students')
+                .update({
+                    eco_points: studentData.eco_points - oppData.min_points
+                })
+                .eq('id', appData.student_id);
+
+            if (deductError) {
+                console.error('Error deducting points:', deductError);
+                return NextResponse.json(
+                    { success: false, error: 'Failed to deduct eco points' },
+                    { status: 500 }
+                );
+            }
+        }
+
+        // 4. Update status
         const { data: updatedApp, error: updateError } = await supabase
             .from('opportunity_applications')
             .update({ status, updated_at: new Date().toISOString() })
