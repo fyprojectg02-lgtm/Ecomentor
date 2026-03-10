@@ -146,6 +146,10 @@ create policy "Admins can update recommended tasks"
     exists (select 1 from profiles where id = auth.uid() and role = 'administrator')
   );
 
+create policy "Students can insert their own recommended tasks" 
+  on recommended_tasks for insert 
+  with check (auth.uid() = created_by);
+
 -- Index for faster queries
 create index idx_recommended_tasks_education on recommended_tasks(education_level);
 create index idx_recommended_tasks_difficulty on recommended_tasks(difficulty);

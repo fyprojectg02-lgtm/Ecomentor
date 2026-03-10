@@ -86,27 +86,49 @@ export async function POST(req) {
 
         // First, try to get recommendations from database
         if (!regenerate) {
-            let query = supabase
+            // 1. Fetch user-specific tasks
+            let { data: userTasks, error: userTasksError } = await supabase
                 .from("recommended_tasks")
                 .select("*")
-                .eq("is_active", true);
+                .eq("is_active", true)
+                .eq("created_by", userId);
 
-            if (isCollege) {
-                query = query.in("education_level", ["college", "all"]);
-            } else {
-                query = query.or(`education_level.eq.all,and(education_level.eq.school,min_grade.lte.${gradeLevel},max_grade.gte.${gradeLevel})`);
+            if (userTasksError) console.error("Error fetching user tasks:", userTasksError);
+
+            // 2. If not enough user tasks, fetch global tasks
+            let combinedTasks = userTasks || [];
+            if (combinedTasks.length < limit) {
+                let query = supabase
+                    .from("recommended_tasks")
+                    .select("*")
+                    .eq("is_active", true)
+                    .is("created_by", null);
+
+                if (isCollege) {
+                    query = query.in("education_level", ["college", "all"]);
+                } else {
+                    query = query.or(`education_level.eq.all,and(education_level.eq.school,min_grade.lte.${gradeLevel},max_grade.gte.${gradeLevel})`);
+                }
+
+                const { data: globalTasks, error: globalTasksError } = await query.limit(limit - combinedTasks.length);
+                if (globalTasksError) console.error("Error fetching global tasks:", globalTasksError);
+
+                if (globalTasks) {
+                    combinedTasks = [...combinedTasks, ...globalTasks];
+                }
             }
 
-            const { data: dbTasks } = await query.limit(limit);
-
-            if (dbTasks && dbTasks.length >= limit) {
+            if (combinedTasks.length > 0) {
                 return NextResponse.json({
                     success: true,
-                    recommendations: dbTasks,
+                    recommendations: combinedTasks,
                     source: "database"
                 });
             }
         }
+
+        // Force exactly 3 tasks for new generation
+        const taskLimit = 3;
 
         // Generate AI recommendations
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
@@ -123,7 +145,7 @@ Student Context:
 - Interests: ${interests.join(", ")}
 
 Requirements:
-1. Generate ${limit} personalized eco-action task recommendations
+1. Generate ${taskLimit} personalized eco-action task recommendations
 2. ${isCollege ? "Tasks should be sophisticated and suitable for college students with access to campus resources" : `Tasks should be age-appropriate for Grade ${gradeLevel} students`}
 3. Align with their interests: ${interests.join(", ")}
 4. Progressive difficulty based on experience (${stats?.completed_tasks || 0} tasks completed)
@@ -183,7 +205,7 @@ Do not include markdown code blocks. Return only the JSON object.
         // Optionally save to database for future use
         const savedTasks = [];
         for (const task of aiResponse.recommendations) {
-            const { data: savedTask } = await supabase
+            const { data: savedTask, error: saveError } = await supabase
                 .from("recommended_tasks")
                 .insert({
                     title: task.title,
@@ -200,19 +222,30 @@ Do not include markdown code blocks. Return only the JSON object.
                     impact_metrics: task.impactMetrics,
                     instructions: task.instructions,
                     is_active: true,
-                    created_by: null // AI-generated
+                    created_by: userId // AI-generated and saved for this user
                 })
                 .select()
                 .single();
+
+            if (saveError) {
+                console.error("❌ Error saving generated task to database:", saveError);
+            }
 
             if (savedTask) {
                 savedTasks.push(savedTask);
             }
         }
 
+        // After generation, fetch ALL tasks for this user to return the full set
+        const { data: allUserTasks } = await supabase
+            .from("recommended_tasks")
+            .select("*")
+            .eq("is_active", true)
+            .eq("created_by", userId);
+
         return NextResponse.json({
             success: true,
-            recommendations: savedTasks.length > 0 ? savedTasks : aiResponse.recommendations,
+            recommendations: allUserTasks || savedTasks,
             source: "ai_generated",
             studentContext: {
                 educationLevel,

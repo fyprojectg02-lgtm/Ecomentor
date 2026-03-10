@@ -28,87 +28,57 @@ export default function TaskRecommendations({ userId, educationLevel }) {
     const [isCompletingTask, setIsCompletingTask] = useState(false);
 
     useEffect(() => {
-        const loadData = async () => {
-            await fetchCompletedTasks();
-            await fetchRecommendations();
-        };
-        loadData();
+        fetchRecommendations();
     }, [userId]);
 
     const fetchRecommendations = async (regenerate = false) => {
         setIsLoading(true);
         try {
+            // 1. Fetch recommendations (all user tasks if regenerate is false, else 3 new ones)
             const response = await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     userId,
-                    limit: 6,
+                    limit: 3,
                     regenerate
                 })
             });
-
             const data = await response.json();
-            if (data.success) {
-                // Filter out completed tasks - fetch fresh completed tasks to ensure accuracy
-                const { data: completions } = await supabase
-                    .from('activity_completions')
-                    .select('activity_id')
-                    .eq('student_id', userId)
-                    .eq('activity_type', 'task');
 
-                const completedTaskIds = completions?.map(c => c.activity_id) || [];
-                const filteredRecs = data.recommendations.filter(
-                    task => !completedTaskIds.includes(task.id)
-                );
-                setRecommendations(filteredRecs);
+            // 2. Fetch completions to separate tasks
+            const { data: completions } = await supabase
+                .from('activity_completions')
+                .select('activity_id, completed_at, points_awarded, completion_data')
+                .eq('student_id', userId)
+                .eq('activity_type', 'task');
+
+            const completedTaskIds = completions?.map(c => c.activity_id) || [];
+
+            if (data.success) {
+                const allFetchedTasks = data.recommendations;
+
+                // Separate into Active and Completed
+                const active = allFetchedTasks.filter(t => !completedTaskIds.includes(t.id));
+                const completed = allFetchedTasks
+                    .filter(t => completedTaskIds.includes(t.id))
+                    .map(task => {
+                        const comp = completions.find(c => c.activity_id === task.id);
+                        return {
+                            ...task,
+                            completedAt: comp?.completed_at,
+                            pointsEarned: comp?.points_awarded,
+                            completionData: comp?.completion_data
+                        };
+                    });
+
+                setRecommendations(active);
+                setCompletedTasks(completed);
             }
         } catch (error) {
             console.error("Error fetching recommendations:", error);
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const fetchCompletedTasks = async () => {
-        try {
-            // Fetch completed tasks from activity_completions
-            const { data: completions, error } = await supabase
-                .from('activity_completions')
-                .select('activity_id, completed_at, points_awarded, completion_data')
-                .eq('student_id', userId)
-                .eq('activity_type', 'task')
-                .order('completed_at', { ascending: false });
-
-            if (error) {
-                console.error('Error fetching completed tasks:', error);
-                return;
-            }
-
-            if (completions && completions.length > 0) {
-                // Get task details for completed tasks
-                const taskIds = completions.map(c => c.activity_id);
-                const { data: tasks } = await supabase
-                    .from('recommended_tasks')
-                    .select('*')
-                    .in('id', taskIds);
-
-                // Map completions with task details
-                const completedWithDetails = completions.map(completion => {
-                    const task = tasks?.find(t => t.id === completion.activity_id);
-                    return {
-                        ...task,
-                        id: completion.activity_id,
-                        completedAt: completion.completed_at,
-                        pointsEarned: completion.points_awarded,
-                        completionData: completion.completion_data
-                    };
-                }).filter(task => task.id); // Filter out any null/undefined tasks
-
-                setCompletedTasks(completedWithDetails);
-            }
-        } catch (error) {
-            console.error('Error fetching completed tasks:', error);
         }
     };
 
@@ -131,9 +101,9 @@ export default function TaskRecommendations({ userId, educationLevel }) {
                     activityType: 'task'
                 });
                 setShowPointsNotification(true);
+                setShowPointsNotification(true);
                 setSelectedTask(null);
-                // Refresh both recommendations and completed tasks
-                await fetchCompletedTasks();
+                // Refresh data (handles both active and completed)
                 await fetchRecommendations();
             }
         } catch (error) {
