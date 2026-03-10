@@ -33,6 +33,7 @@ function StudentDashboardContent() {
   const [educationLevel, setEducationLevel] = useState("");
   const [studentData, setStudentData] = useState({
     ecoPoints: 0,
+    weeklyEcoPoints: 0,
     level: "school",
     classroom: null,
     rank: 0,
@@ -274,9 +275,7 @@ function StudentDashboardContent() {
               <Award className="h-4 w-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-bold text-emerald-400">{studentData.ecoPoints}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              <span className="text-emerald-400 font-semibold">+125</span> this week
-            </p>
+            
           </div>
 
           <div className="bg-[#0f0f0f] rounded-2xl shadow-sm border border-[#1a1a1a] p-5 hover:shadow-lg transition-shadow">
@@ -304,7 +303,7 @@ function StudentDashboardContent() {
             </div>
             <div className="text-2xl font-bold text-white">#{studentData.rank}</div>
             <p className="text-xs text-gray-500 mt-1">
-              <span className="text-emerald-400 font-semibold">↑ 2</span> positions
+              <span className="text-emerald-400 font-semibold">{studentData.ecoPoints}</span> eco points
             </p>
           </div>
         </div>
