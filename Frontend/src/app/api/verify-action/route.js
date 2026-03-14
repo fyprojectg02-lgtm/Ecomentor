@@ -52,7 +52,7 @@ export async function POST(request) {
     let status = "pending_review";
     let autoApproved = false;
 
-    if (aiVerification.confidence > 0.9 && aiVerification.verified) {
+    if (aiVerification.confidence >= 0.7 && aiVerification.verified) {
       status = "approved";
       autoApproved = true;
     } else if (!aiVerification.verified || aiVerification.confidence < 0.7) {
