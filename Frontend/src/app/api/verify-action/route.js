@@ -23,19 +23,38 @@ export async function POST(request) {
     // Connect to MongoDB
     const { db } = await connectToDatabase();
 
-    // IMPORTANT: Fetch student details from Supabase (not MongoDB)
-    const { data: student, error: supabaseError } = await supabase
-      .from('user_details')
+    // Fetch student details from Supabase - try both tables
+    let student = null;
+    let supabaseError = null;
+
+    const { data: studentData, error: err1 } = await supabase
+      .from('students')
       .select('*')
-      .eq('user_id', studentId)
+      .eq('id', studentId)
       .single();
 
-    if (supabaseError || !student) {
-      console.error("Supabase error:", supabaseError);
-      return NextResponse.json(
-        { success: false, error: "Student not found in Supabase" },
-        { status: 404 }
-      );
+    if (studentData) {
+      student = studentData;
+    } else {
+      // Fallback: try user_details table
+      const { data: userDetails, error: err2 } = await supabase
+        .from('user_details')
+        .select('*')
+        .eq('user_id', studentId)
+        .single();
+
+      if (userDetails) {
+        student = userDetails;
+      } else {
+        supabaseError = err2 || err1;
+      }
+    }
+
+    // If student not found in either table, create a minimal placeholder
+    // so submissions still get saved (student may not have a profile row yet)
+    if (!student) {
+      console.warn("Student not found in Supabase, proceeding with minimal data:", supabaseError);
+      student = { id: studentId, name: "Unknown", eco_points: 0, completed_tasks: 0, classroom_id: null };
     }
 
     // STEP 1: Gemini AI Verification
@@ -63,8 +82,8 @@ export async function POST(request) {
     // Store Supabase student ID as a STRING (not ObjectId)
     const submission = {
       studentId: studentId, // Store as string (Supabase UUID or ID)
-      studentName: student.name || student.full_name || "Unknown",
-      classroomId: student.classroom_id || null,
+      studentName: student.name || student.full_name || student.display_name || "Unknown",
+      classroomId: student.classroom_id || student.classroomId || null,
       actionType,
       description,
       location,
@@ -85,12 +104,22 @@ export async function POST(request) {
 
     // STEP 4: Auto-approve: update student points in SUPABASE
     if (autoApproved) {
+      // Fetch latest points from students table to avoid stale data
+      const { data: latestStudent } = await supabase
+        .from('students')
+        .select('eco_points, completed_tasks')
+        .eq('id', studentId)
+        .single();
+
+      const currentPoints = latestStudent?.eco_points || 0;
+      const currentTasks = latestStudent?.completed_tasks || 0;
+
       // Update Supabase student record
       const { error: updateError } = await supabase
         .from('students')
         .update({
-          eco_points: (student.eco_points || 0) + aiVerification.suggestedPoints,
-          completed_tasks: (student.completed_tasks || 0) + 1,
+          eco_points: currentPoints + aiVerification.suggestedPoints,
+          completed_tasks: currentTasks + 1,
         })
         .eq('id', studentId);
 
