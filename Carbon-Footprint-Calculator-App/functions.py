@@ -1,12 +1,5 @@
-from streamlit.components.v1 import html
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-import matplotlib.pyplot as plt
-import io
 import pandas as pd
-def click_element(element):
-    open_script = f"<script type = 'text/javascript'>window.parent.document.querySelector('[id^=tabs-bui][id$=-{element}]').click();</script>"
-    html(open_script, width=0, height=0)
 
 
 sample = {'Body Type': 2,
@@ -116,48 +109,6 @@ def hesapla(model,ss, sample_df):
     hesap = {"Travel": travel[0], "Energy": energy[0], "Waste": waste[0], "Diet": diet[0]}
 
     return hesap
-
-
-def chart(model, scaler,sample_df, prediction):
-    p = hesapla(model, scaler,sample_df)
-    bbox_props = dict(boxstyle="round", facecolor="white", edgecolor="white", alpha=0.7)
-
-    plt.figure(figsize=(10, 10))
-    patches, texts = plt.pie(x=p.values(),
-                             labels=p.keys(),
-                             explode=[0.03] * 4,
-                             labeldistance=0.75,
-                             colors=["#29ad9f", "#1dc8b8", "#99d9d9", "#b4e3dd" ], shadow=True,
-                             textprops={'fontsize': 20, 'weight': 'bold', "color": "#000000ad"})
-    for text in texts:
-        text.set_horizontalalignment('center')
-
-    data = io.BytesIO()
-    plt.savefig(data, transparent=True)
-
-    background = Image.open("./media/default.png")
-    draw = ImageDraw.Draw(background)
-    font1 = ImageFont.truetype(font="./style/ArchivoBlack-Regular.ttf", size=50)
-    font = ImageFont.truetype(font="./style/arialuni.ttf", size=50)
-    draw.text(xy=(320, 50), text=f"  How big is your\nCarbon Footprint?", font=font1, fill="#039e8e", stroke_width=1, stroke_fill="#039e8e")
-    draw.text(xy=(370, 250), text=f"Monthly Emission \n\n   {prediction:.0f} kgCO₂e", font=font, fill="#039e8e", stroke_width=1, stroke_fill="#039e8e")
-    data_back = io.BytesIO()
-    background.save(data_back, "PNG")
-    background = Image.open(data_back).convert('RGBA')
-    piechart = Image.open(data)
-    ayak = Image.open("./media/ayak.png").resize((370, 370))
-    bg_width, bg_height = piechart.size
-    ov_width, ov_height = ayak.size
-    x = (bg_width - ov_width) // 2
-    y = (bg_height - ov_height) // 2
-    piechart.paste(ayak, (x, y), ayak.convert('RGBA'))
-    background.paste(piechart, (40, 200), piechart.convert('RGBA'))
-    data2 = io.BytesIO()
-    background.save(data2, "PNG")
-    background = Image.open(data2).resize((700, 700))
-    data3 = io.BytesIO()
-    background.save(data3, "PNG")
-    return data3
 
 
 
