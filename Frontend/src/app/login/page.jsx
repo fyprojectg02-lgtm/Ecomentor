@@ -28,6 +28,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const passwordRules = [
+    { label: "At least 8 characters", test: (p) => p.length >= 8 },
+    { label: "One uppercase letter", test: (p) => /[A-Z]/.test(p) },
+    { label: "One number", test: (p) => /[0-9]/.test(p) },
+    { label: "One special character", test: (p) => /[^A-Za-z0-9]/.test(p) },
+  ];
+
+  const emailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
 const handleAuth = async (e) => {
   e.preventDefault();
   setError(null);
@@ -67,6 +76,18 @@ const handleAuth = async (e) => {
       }
     } else {
       // ============ SIGN UP ============
+      // Frontend validation
+      if (!emailValid(email)) {
+        setError("Please enter a valid email address.");
+        setIsLoading(false);
+        return;
+      }
+      const failedRules = passwordRules.filter((r) => !r.test(password));
+      if (failedRules.length > 0) {
+        setError("Password must meet all requirements below.");
+        setIsLoading(false);
+        return;
+      }
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -174,12 +195,21 @@ const handleAuth = async (e) => {
                   <input
                     type="email"
                     placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 bg-[#0a0d0b] border border-emerald-900/60 rounded-xl text-emerald-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-400"
+                    className={`w-full pl-10 pr-4 py-3 bg-[#0a0d0b] border rounded-xl text-emerald-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-400 ${
+                      !isLogin && email.length > 0
+                        ? emailValid(email)
+                          ? "border-emerald-500/60"
+                          : "border-red-500/60"
+                        : "border-emerald-900/60"
+                    }`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
+                {!isLogin && email.length > 0 && !emailValid(email) && (
+                  <p className="text-xs text-red-400 px-1">Enter a valid email address</p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -203,6 +233,21 @@ const handleAuth = async (e) => {
                   </button>
                 </div>
               </div>
+
+              {/* Password rules — signup only */}
+              {!isLogin && password.length > 0 && (
+                <ul className="space-y-1 px-1">
+                  {passwordRules.map((rule) => {
+                    const passed = rule.test(password);
+                    return (
+                      <li key={rule.label} className={`flex items-center gap-2 text-xs ${passed ? "text-emerald-400" : "text-gray-500"}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${passed ? "bg-emerald-400" : "bg-gray-600"}`} />
+                        {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
               {/* Signup-only fields */}
               {!isLogin && (

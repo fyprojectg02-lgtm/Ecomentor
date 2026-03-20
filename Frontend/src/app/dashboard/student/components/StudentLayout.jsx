@@ -19,7 +19,8 @@ import {
   Target,
   Sparkles,
   Gamepad2,
-  Upload
+  Upload,
+  Wind
 } from "lucide-react";
 
 export default function StudentLayout({ children }) {
@@ -130,6 +131,7 @@ export default function StudentLayout({ children }) {
     if (pathname?.includes("opportunities")) return "opportunities";
     if (pathname?.includes("profile")) return "profile";
     if (pathname?.includes("submit-action")) return "submit-action";
+    if (pathname?.includes("carbon-calculator")) return "carbon-calculator";
     return "home";
   };
 
@@ -155,6 +157,7 @@ export default function StudentLayout({ children }) {
     { id: "community", label: "Community", icon: MessageSquare, href: "/dashboard/student/community" },
     { id: "opportunities", label: "Opportunities", icon: Briefcase, href: "/dashboard/student/opportunities" },
     { id: "submit-action", label: "Submit Eco-Action", icon: Upload, href: "/dashboard/student/submit-action" },
+    { id: "carbon-calculator", label: "Carbon Calculator", icon: Wind, href: "/dashboard/student/carbon-calculator" },
     { id: "profile", label: "Profile", icon: User, href: "/dashboard/student/profile" },
   ];
 
@@ -162,13 +165,13 @@ export default function StudentLayout({ children }) {
     <div className="min-h-screen bg-[#060606] text-gray-100 flex overflow-hidden">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-[#0b0b0b] border-r border-[#111] h-screen sticky top-0">
-        <div className="p-6">
-          <div className="flex items-center gap-2 mb-8">
+        <div className="p-6 flex flex-col h-full overflow-hidden">
+          <div className="flex items-center gap-2 mb-8 shrink-0">
             <Leaf className="text-emerald-500" size={28} />
             <h1 className="text-2xl font-semibold text-white">EcoMentor</h1>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-2 overflow-y-auto flex-1 pr-1 scrollbar-thin scrollbar-thumb-[#222] scrollbar-track-transparent">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
